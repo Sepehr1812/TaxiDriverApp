@@ -1,10 +1,13 @@
-package ir.snapp.snappboxtest
+package ir.snapp.snappboxtest.view
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.firebase.messaging.FirebaseMessaging
+import ir.snapp.snappboxtest.R
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -20,6 +23,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.e("FCM token", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+            Log.i("FCM token", token)
+        }
 
         (supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment).getMapAsync(this)
     }
