@@ -8,7 +8,9 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.firebase.messaging.FirebaseMessaging
 import ir.snapp.snappboxtest.R
+import ir.snapp.snappboxtest.data.Offer
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
+import ir.snapp.snappboxtest.util.Constants.OFFER
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -35,6 +37,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         (supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment).getMapAsync(this)
+
+        intent.getParcelableExtra<Offer>(OFFER).also { Log.d("FCM Data", "$it") }
     }
 
     override fun onMapReady(p0: GoogleMap) {
