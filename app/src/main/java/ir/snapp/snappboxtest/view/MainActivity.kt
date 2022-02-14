@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     /** Moves camera to the specific location */
     private fun moveToLocation(location: LatLng) {
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
     }
 
     override fun onDestroy() {
