@@ -189,6 +189,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
                 mAnimator = TimeAnimator()
                 mAnimator?.setTimeListener(this@MainActivity)
                 animateButton()
+
+                btnAccept.setOnLongClickListener {
+                    finish()
+                    return@setOnLongClickListener true
+                }
             }
         } ?: apply { moveToCurrentLocationFlag = true }
     }
