@@ -25,6 +25,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import ir.snapp.snappboxtest.R
@@ -45,10 +46,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
             currentLocation = locationResult.lastLocation.run { LatLng(latitude, longitude) }
-            currentLocation?.also { moveToLocation(it) }
+            if (moveToCurrentLocationFlag) currentLocation?.also { moveToLocation(it) }
         }
     }
     private lateinit var locationManager: LocationManager
+
+    /** determines moving map camera to current location or not */
+    private var moveToCurrentLocationFlag = false
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -101,6 +105,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     private fun checkForOffer() {
         intent.getParcelableExtra<Offer>(OFFER)?.also {
+            moveToCurrentLocationFlag = false
+
             with(binding) {
                 // bound map to the top of the offer bottom sheet
                 ConstraintSet().apply {
@@ -117,10 +123,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 // display offer bottom sheet
                 groupOffer.visibility = View.VISIBLE
                 tvPrice.text = it.price.toString()
-                tvOriginPin.text = getString(R.string.origin_address_placeholder, it.origin.address)
-                tvDestPin.text =
-                    getString(R.string.dest_address_placeholder, it.destination.address)
+                tvOriginPin.apply {
+                    text = getString(R.string.origin_address_placeholder, it.origin.address)
+                    setOnClickListener { _ -> moveToLocation(it.origin.latLng) }
+                }
+                tvDestPin.apply {
+                    text = getString(R.string.dest_address_placeholder, it.destination.address)
+                    setOnClickListener { _ -> moveToLocation(it.destination.latLng) }
+                }
 
+                // to bound the map to the all pins
+                val latLngBounds = LatLngBounds.Builder().apply {
+                    currentLocation?.also { include(it) }
+                }
                 // add pins to the map
                 arrayOf(it.origin.latLng, it.destination.latLng).forEachIndexed { i, loc ->
                     this@MainActivity.map.addMarker(
@@ -131,6 +146,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             )?.also { icon ->
 
                                 position(loc)
+                                latLngBounds.include(loc)
 
                                 // change color for destination pin
                                 if (i == 1) icon.setTint(getColor(R.color.dest_blue))
@@ -138,8 +154,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             }
                         })
                 }
+
+                this@MainActivity.map.animateCamera(
+                    CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
+                )
             }
-        }
+        } ?: apply { moveToCurrentLocationFlag = true }
     }
 
     @SuppressLint("MissingPermission")
@@ -196,12 +216,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
 
-        checkForOffer()
+        map.setOnMapLoadedCallback { checkForOffer() }
     }
 
     /** Moves camera to the specific location */
     private fun moveToLocation(location: LatLng) {
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 20f))
     }
 
     override fun onDestroy() {
