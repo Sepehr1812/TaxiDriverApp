@@ -8,4 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="dark_blue">#081b43</color>
+    <color name="origin_blue">#1c50b5</color>
+    <color name="dest_blue">#1c1f28</color>
+    <color name="button_blue">#0049d6</color>
+    <color name="button_hold_blue">#00246b</color>
+    <color name="border">#e2e6e5</color>
 </resources>
