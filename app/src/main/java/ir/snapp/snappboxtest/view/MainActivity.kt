@@ -128,74 +128,91 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
         intent.getParcelableExtra<Offer>(OFFER)?.also {
             moveToCurrentLocationFlag = false
 
-            with(binding) {
-                // bound map to the top of the offer bottom sheet
-                ConstraintSet().apply {
-                    clone(constraintLayoutParent)
-                    connect(
-                        map.id,
-                        ConstraintSet.BOTTOM,
-                        viewTransparentBorder.id,
-                        ConstraintSet.BOTTOM
-                    )
-                    applyTo(constraintLayoutParent)
-                }
-
-                // display offer bottom sheet
-                groupOffer.visibility = View.VISIBLE
-                tvPrice.text = it.price.toString()
-                tvOriginPin.apply {
-                    text = getString(R.string.origin_address_placeholder, it.origin.address)
-                    setOnClickListener { _ -> moveToLocation(it.origin.latLng) }
-                }
-                tvDestPin.apply {
-                    text = getString(R.string.dest_address_placeholder, it.destination.address)
-                    setOnClickListener { _ -> moveToLocation(it.destination.latLng) }
-                }
-
-                // to bound the map to the all pins
-                val latLngBounds = LatLngBounds.Builder().apply {
-                    currentLocation?.also { include(it) }
-                }
-                // add pins to the map
-                arrayOf(it.origin.latLng, it.destination.latLng).forEachIndexed { i, loc ->
-                    this@MainActivity.map.addMarker(
-                        MarkerOptions().apply {
-                            ContextCompat.getDrawable(
-                                this@MainActivity,
-                                R.drawable.ic_origin_pin,
-                            )?.also { icon ->
-
-                                position(loc)
-                                latLngBounds.include(loc)
-
-                                // change color for destination pin
-                                if (i == 1) icon.setTint(getColor(R.color.dest_blue))
-                                icon(BitmapDescriptorFactory.fromBitmap(icon.toBitmap()))
-                            }
-                        })
-                }
-
-                this@MainActivity.map.animateCamera(
-                    CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
-                )
-
-                // implement button timer
-                val layerDrawable = btnAccept.background as LayerDrawable
-                mClipDrawable =
-                    layerDrawable.findDrawableByLayerId(R.id.clip_drawable) as ClipDrawable
-
-                // Set up TimeAnimator to fire off
-                mAnimator = TimeAnimator()
-                mAnimator?.setTimeListener(this@MainActivity)
-                animateButton()
-
-                btnAccept.setOnLongClickListener {
-                    finish()
-                    return@setOnLongClickListener true
-                }
-            }
+            reConstraintMap()
+            displayOfferSheet(it)
+            addMapMarkers(it)
+            setUpButton()
         } ?: apply { moveToCurrentLocationFlag = true }
+    }
+
+    /**  bound map to the top of the offer bottom sheet */
+    private fun reConstraintMap() {
+        with(binding) {
+
+            ConstraintSet().apply {
+                clone(constraintLayoutParent)
+                connect(
+                    map.id,
+                    ConstraintSet.BOTTOM,
+                    viewTransparentBorder.id,
+                    ConstraintSet.BOTTOM
+                )
+                applyTo(constraintLayoutParent)
+            }
+        }
+    }
+
+    private fun displayOfferSheet(offer: Offer) {
+        with(binding) {
+            groupOffer.visibility = View.VISIBLE
+            tvPrice.text = offer.price.toString()
+            tvOriginPin.apply {
+                text = getString(R.string.origin_address_placeholder, offer.origin.address)
+                setOnClickListener { moveToLocation(offer.origin.latLng) }
+            }
+            tvDestPin.apply {
+                text = getString(R.string.dest_address_placeholder, offer.destination.address)
+                setOnClickListener { moveToLocation(offer.destination.latLng) }
+            }
+        }
+    }
+
+    private fun addMapMarkers(offer: Offer) {
+        // to bound the map to the all pins
+        val latLngBounds = LatLngBounds.Builder().apply {
+            currentLocation?.also { include(it) }
+        }
+        // add pins to the map
+        arrayOf(offer.origin.latLng, offer.destination.latLng).forEachIndexed { i, loc ->
+            this@MainActivity.map.addMarker(
+                MarkerOptions().apply {
+                    ContextCompat.getDrawable(
+                        this@MainActivity,
+                        R.drawable.ic_origin_pin,
+                    )?.also { icon ->
+
+                        position(loc)
+                        latLngBounds.include(loc)
+
+                        // change color for destination pin
+                        if (i == 1) icon.setTint(getColor(R.color.dest_blue))
+                        icon(BitmapDescriptorFactory.fromBitmap(icon.toBitmap()))
+                    }
+                })
+        }
+
+        this@MainActivity.map.animateCamera(
+            CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
+        )
+    }
+
+    /** implement button timer */
+    private fun setUpButton() {
+        with(binding) {
+            val layerDrawable = btnAccept.background as LayerDrawable
+            mClipDrawable =
+                layerDrawable.findDrawableByLayerId(R.id.clip_drawable) as ClipDrawable
+
+            // Set up TimeAnimator to fire off
+            mAnimator = TimeAnimator()
+            mAnimator?.setTimeListener(this@MainActivity)
+            animateButton()
+
+            btnAccept.setOnLongClickListener {
+                finish()
+                return@setOnLongClickListener true
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
