@@ -1,10 +1,13 @@
 package ir.snapp.snappboxtest.view
 
 import android.Manifest
+import android.animation.TimeAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.ClipDrawable
+import android.graphics.drawable.LayerDrawable
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -34,11 +37,13 @@ import com.google.firebase.messaging.FirebaseMessaging
 import ir.snapp.snappboxtest.R
 import ir.snapp.snappboxtest.data.Offer
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
+import ir.snapp.snappboxtest.util.Constants.LEVEL_INCREMENT
+import ir.snapp.snappboxtest.util.Constants.MAX_LEVEL
 import ir.snapp.snappboxtest.util.Constants.OFFER
 import ir.snapp.snappboxtest.util.DialogHelper
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeListener {
 
     // region of properties
     private var _binding: ActivityMainBinding? = null
@@ -58,6 +63,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     /** determines moving map camera to current location or not */
     private var moveToCurrentLocationFlag = false
+
+    private var mAnimator: TimeAnimator? = null
+    private var mCurrentLevel = 0
+    private var mClipDrawable: ClipDrawable? = null
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -119,59 +128,91 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         intent.getParcelableExtra<Offer>(OFFER)?.also {
             moveToCurrentLocationFlag = false
 
-            with(binding) {
-                // bound map to the top of the offer bottom sheet
-                ConstraintSet().apply {
-                    clone(constraintLayoutParent)
-                    connect(
-                        map.id,
-                        ConstraintSet.BOTTOM,
-                        viewTransparentBorder.id,
-                        ConstraintSet.BOTTOM
-                    )
-                    applyTo(constraintLayoutParent)
-                }
-
-                // display offer bottom sheet
-                groupOffer.visibility = View.VISIBLE
-                tvPrice.text = it.price.toString()
-                tvOriginPin.apply {
-                    text = getString(R.string.origin_address_placeholder, it.origin.address)
-                    setOnClickListener { _ -> moveToLocation(it.origin.latLng) }
-                }
-                tvDestPin.apply {
-                    text = getString(R.string.dest_address_placeholder, it.destination.address)
-                    setOnClickListener { _ -> moveToLocation(it.destination.latLng) }
-                }
-
-                // to bound the map to the all pins
-                val latLngBounds = LatLngBounds.Builder().apply {
-                    currentLocation?.also { include(it) }
-                }
-                // add pins to the map
-                arrayOf(it.origin.latLng, it.destination.latLng).forEachIndexed { i, loc ->
-                    this@MainActivity.map.addMarker(
-                        MarkerOptions().apply {
-                            ContextCompat.getDrawable(
-                                this@MainActivity,
-                                R.drawable.ic_origin_pin,
-                            )?.also { icon ->
-
-                                position(loc)
-                                latLngBounds.include(loc)
-
-                                // change color for destination pin
-                                if (i == 1) icon.setTint(getColor(R.color.dest_blue))
-                                icon(BitmapDescriptorFactory.fromBitmap(icon.toBitmap()))
-                            }
-                        })
-                }
-
-                this@MainActivity.map.animateCamera(
-                    CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
-                )
-            }
+            reConstraintMap()
+            displayOfferSheet(it)
+            addMapMarkers(it)
+            setUpButton()
         } ?: apply { moveToCurrentLocationFlag = true }
+    }
+
+    /**  bound map to the top of the offer bottom sheet */
+    private fun reConstraintMap() {
+        with(binding) {
+
+            ConstraintSet().apply {
+                clone(constraintLayoutParent)
+                connect(
+                    map.id,
+                    ConstraintSet.BOTTOM,
+                    viewTransparentBorder.id,
+                    ConstraintSet.BOTTOM
+                )
+                applyTo(constraintLayoutParent)
+            }
+        }
+    }
+
+    private fun displayOfferSheet(offer: Offer) {
+        with(binding) {
+            groupOffer.visibility = View.VISIBLE
+            tvPrice.text = offer.price.toString()
+            tvOriginPin.apply {
+                text = getString(R.string.origin_address_placeholder, offer.origin.address)
+                setOnClickListener { moveToLocation(offer.origin.latLng) }
+            }
+            tvDestPin.apply {
+                text = getString(R.string.dest_address_placeholder, offer.destination.address)
+                setOnClickListener { moveToLocation(offer.destination.latLng) }
+            }
+        }
+    }
+
+    private fun addMapMarkers(offer: Offer) {
+        // to bound the map to the all pins
+        val latLngBounds = LatLngBounds.Builder().apply {
+            currentLocation?.also { include(it) }
+        }
+        // add pins to the map
+        arrayOf(offer.origin.latLng, offer.destination.latLng).forEachIndexed { i, loc ->
+            this@MainActivity.map.addMarker(
+                MarkerOptions().apply {
+                    ContextCompat.getDrawable(
+                        this@MainActivity,
+                        R.drawable.ic_origin_pin,
+                    )?.also { icon ->
+
+                        position(loc)
+                        latLngBounds.include(loc)
+
+                        // change color for destination pin
+                        if (i == 1) icon.setTint(getColor(R.color.dest_blue))
+                        icon(BitmapDescriptorFactory.fromBitmap(icon.toBitmap()))
+                    }
+                })
+        }
+
+        this@MainActivity.map.animateCamera(
+            CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
+        )
+    }
+
+    /** implement button timer */
+    private fun setUpButton() {
+        with(binding) {
+            val layerDrawable = btnAccept.background as LayerDrawable
+            mClipDrawable =
+                layerDrawable.findDrawableByLayerId(R.id.clip_drawable) as ClipDrawable
+
+            // Set up TimeAnimator to fire off
+            mAnimator = TimeAnimator()
+            mAnimator?.setTimeListener(this@MainActivity)
+            animateButton()
+
+            btnAccept.setOnLongClickListener {
+                finish()
+                return@setOnLongClickListener true
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -249,5 +290,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onDestroy() {
         _binding = null
         super.onDestroy()
+    }
+
+    override fun onTimeUpdate(animation: TimeAnimator?, totalTime: Long, deltaTime: Long) {
+        mClipDrawable?.level = mCurrentLevel
+        if (mCurrentLevel >= MAX_LEVEL)
+            mAnimator?.cancel()
+        else mCurrentLevel = MAX_LEVEL.coerceAtMost(mCurrentLevel + LEVEL_INCREMENT)
+    }
+
+    /**
+     * Animates button timer progress by filling it from left to right.
+     */
+    private fun animateButton() {
+        if (mAnimator?.isRunning == false) {
+            mCurrentLevel = 0
+            mAnimator?.start()
+        }
     }
 }
