@@ -3,10 +3,13 @@ package ir.snapp.snappboxtest.view
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,6 +35,8 @@ import ir.snapp.snappboxtest.R
 import ir.snapp.snappboxtest.data.Offer
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
 import ir.snapp.snappboxtest.util.Constants.OFFER
+import ir.snapp.snappboxtest.util.DialogHelper
+
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -62,6 +67,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         else requestLocation()
     }
 
+    private val resultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (!Settings.canDrawOverlays(this)) finish()
+    }
+
     // END of region of properties
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +83,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         initialFirebaseData()
         if (!isLocationGranted()) requestLocationAccess()
+        if (!Settings.canDrawOverlays(this)) requestOverlayPermission()
 
         (supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment).getMapAsync(this)
         initialLocationData()
@@ -191,6 +203,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
+    }
+
+    private fun requestOverlayPermission() {
+        DialogHelper.showInfoMessage(this) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            resultLauncher.launch(intent)
+        }
     }
 
     override fun onResume() {
