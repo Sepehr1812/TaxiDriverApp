@@ -1,10 +1,13 @@
 package ir.snapp.snappboxtest.view
 
 import android.Manifest
+import android.animation.TimeAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.ClipDrawable
+import android.graphics.drawable.LayerDrawable
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -34,11 +37,13 @@ import com.google.firebase.messaging.FirebaseMessaging
 import ir.snapp.snappboxtest.R
 import ir.snapp.snappboxtest.data.Offer
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
+import ir.snapp.snappboxtest.util.Constants.LEVEL_INCREMENT
+import ir.snapp.snappboxtest.util.Constants.MAX_LEVEL
 import ir.snapp.snappboxtest.util.Constants.OFFER
 import ir.snapp.snappboxtest.util.DialogHelper
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeListener {
 
     // region of properties
     private var _binding: ActivityMainBinding? = null
@@ -58,6 +63,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     /** determines moving map camera to current location or not */
     private var moveToCurrentLocationFlag = false
+
+    private var mAnimator: TimeAnimator? = null
+    private var mCurrentLevel = 0
+    private var mClipDrawable: ClipDrawable? = null
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -170,6 +179,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 this@MainActivity.map.animateCamera(
                     CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
                 )
+
+                // implement button timer
+                val layerDrawable = btnAccept.background as LayerDrawable
+                mClipDrawable =
+                    layerDrawable.findDrawableByLayerId(R.id.clip_drawable) as ClipDrawable
+
+                // Set up TimeAnimator to fire off
+                mAnimator = TimeAnimator()
+                mAnimator?.setTimeListener(this@MainActivity)
+                animateButton()
             }
         } ?: apply { moveToCurrentLocationFlag = true }
     }
@@ -249,5 +268,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onDestroy() {
         _binding = null
         super.onDestroy()
+    }
+
+    override fun onTimeUpdate(animation: TimeAnimator?, totalTime: Long, deltaTime: Long) {
+        mClipDrawable?.level = mCurrentLevel
+        if (mCurrentLevel >= MAX_LEVEL)
+            mAnimator?.cancel()
+        else mCurrentLevel = MAX_LEVEL.coerceAtMost(mCurrentLevel + LEVEL_INCREMENT)
+    }
+
+    /**
+     * Animates button timer progress by filling it from left to right.
+     */
+    private fun animateButton() {
+        if (mAnimator?.isRunning == false) {
+            mCurrentLevel = 0
+            mAnimator?.start()
+        }
     }
 }
