@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayoutParent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".view.MainActivity">
@@ -16,13 +17,17 @@
         tools:background="@color/purple_200" />
 
     <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupOffer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="@drawable/background_bottom_sheet_16"
+        android:visibility="gone"
+        app:constraint_referenced_ids="btnAccept,imageViewDestPin,imageViewOriginPin,tvDestPin,tvOriginPin,tvPrice,tvRial,viewTransparentBorder,viewBorder,viewPriceBox"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="@id/viewTransparentBorder" />
 
     <View
+        android:id="@+id/viewPriceBox"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginHorizontal="56dp"
@@ -42,6 +47,7 @@
         tools:text="35000" />
 
     <TextView
+        android:id="@+id/tvRial"
         style="@style/SmallWhiteText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -8,9 +8,13 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -19,7 +23,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import ir.snapp.snappboxtest.R
 import ir.snapp.snappboxtest.data.Offer
@@ -65,8 +71,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         (supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment).getMapAsync(this)
         initialLocationData()
-
-        intent.getParcelableExtra<Offer>(OFFER)
     }
 
     private fun initialFirebaseData() {
@@ -89,6 +93,52 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             interval = 5000L
             fastestInterval = 5000L
             priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        }
+    }
+
+    /**
+     * Checks for offer and displays it if there are any.
+     */
+    private fun checkForOffer() {
+        intent.getParcelableExtra<Offer>(OFFER)?.also {
+            with(binding) {
+                // bound map to the top of the offer bottom sheet
+                ConstraintSet().apply {
+                    clone(constraintLayoutParent)
+                    connect(
+                        map.id,
+                        ConstraintSet.BOTTOM,
+                        viewTransparentBorder.id,
+                        ConstraintSet.BOTTOM
+                    )
+                    applyTo(constraintLayoutParent)
+                }
+
+                // display offer bottom sheet
+                groupOffer.visibility = View.VISIBLE
+                tvPrice.text = it.price.toString()
+                tvOriginPin.text = getString(R.string.origin_address_placeholder, it.origin.address)
+                tvDestPin.text =
+                    getString(R.string.dest_address_placeholder, it.destination.address)
+
+                // add pins to the map
+                arrayOf(it.origin.latLng, it.destination.latLng).forEachIndexed { i, loc ->
+                    this@MainActivity.map.addMarker(
+                        MarkerOptions().apply {
+                            ContextCompat.getDrawable(
+                                this@MainActivity,
+                                R.drawable.ic_origin_pin,
+                            )?.also { icon ->
+
+                                position(loc)
+
+                                // change color for destination pin
+                                if (i == 1) icon.setTint(getColor(R.color.dest_blue))
+                                icon(BitmapDescriptorFactory.fromBitmap(icon.toBitmap()))
+                            }
+                        })
+                }
+            }
         }
     }
 
@@ -145,6 +195,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     isMyLocationButtonEnabled = true
                 }
             }
+
+        checkForOffer()
     }
 
     /** Moves camera to the specific location */

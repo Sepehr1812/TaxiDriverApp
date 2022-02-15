@@ -2,4 +2,6 @@
     <string name="app_name">SnappBoxTest</string>
     <string name="rial">ریال</string>
     <string name="accept_offer">قبول درخواست</string>
+    <string name="origin_address_placeholder">مبدا  %1$s</string>
+    <string name="dest_address_placeholder">مقصد  %1$s</string>
 </resources>
