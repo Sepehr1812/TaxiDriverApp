@@ -35,6 +35,7 @@ import ir.snapp.snappboxtest.R
 import ir.snapp.snappboxtest.data.Offer
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
 import ir.snapp.snappboxtest.util.Constants.OFFER
+import ir.snapp.snappboxtest.util.DialogHelper
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -205,11 +206,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun requestOverlayPermission() {
-        val intent = Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            Uri.parse("package:$packageName")
-        )
-        resultLauncher.launch(intent)
+        DialogHelper.showInfoMessage(this) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            resultLauncher.launch(intent)
+        }
     }
 
     override fun onResume() {
