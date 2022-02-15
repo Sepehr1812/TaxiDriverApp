@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayoutParent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".view.MainActivity">
@@ -9,6 +11,130 @@
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:background="@color/purple_200" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupOffer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/background_bottom_sheet_16"
+        android:visibility="gone"
+        app:constraint_referenced_ids="btnAccept,imageViewDestPin,imageViewOriginPin,tvDestPin,tvOriginPin,tvPrice,tvRial,viewTransparentBorder,viewBorder,viewPriceBox"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/viewTransparentBorder" />
+
+    <View
+        android:id="@+id/viewPriceBox"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="56dp"
+        android:background="@drawable/background_blue_24"
+        app:layout_constraintBottom_toBottomOf="@id/tvPrice"
+        app:layout_constraintTop_toTopOf="@id/tvPrice" />
+
+    <TextView
+        android:id="@+id/tvPrice"
+        style="@style/BoldWhiteText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintBottom_toTopOf="@id/viewBorder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="35000" />
+
+    <TextView
+        android:id="@+id/tvRial"
+        style="@style/SmallWhiteText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="@string/rial"
+        app:layout_constraintBottom_toBottomOf="@id/tvPrice"
+        app:layout_constraintEnd_toStartOf="@id/tvPrice"
+        app:layout_constraintTop_toTopOf="@id/tvPrice" />
+
+    <View
+        android:id="@+id/viewTransparentBorder"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        app:layout_constraintBottom_toBottomOf="@id/tvPrice"
+        app:layout_constraintTop_toTopOf="@id/tvPrice" />
+
+    <View
+        android:id="@+id/viewBorder"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="12dp"
+        android:background="@color/border"
+        app:layout_constraintBottom_toTopOf="@id/imageViewOriginPin" />
+
+    <ImageView
+        android:id="@+id/imageViewOriginPin"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/ic_origin_pin"
+        app:layout_constraintBottom_toTopOf="@id/imageViewDestPin"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/tvOriginPin"
+        style="@style/NormalBlackText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintBottom_toBottomOf="@id/imageViewOriginPin"
+        app:layout_constraintEnd_toStartOf="@id/imageViewOriginPin"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/imageViewOriginPin"
+        tools:text="مبدا  هفت حوض، میدان نبوت" />
+
+    <ImageView
+        android:id="@+id/imageViewDestPin"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="28dp"
+        android:src="@drawable/ic_origin_pin"
+        app:layout_constraintBottom_toTopOf="@id/btnAccept"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0"
+        app:tint="@color/dest_blue"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/tvDestPin"
+        style="@style/NormalBlackText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        app:layout_constraintBottom_toBottomOf="@id/imageViewDestPin"
+        app:layout_constraintEnd_toStartOf="@id/imageViewDestPin"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/imageViewDestPin"
+        tools:text="مقصد  ونک، میدان ونک" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnAccept"
+        style="@style/NormalWhiteText"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/background_blue_16"
+        android:text="@string/accept_offer"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
