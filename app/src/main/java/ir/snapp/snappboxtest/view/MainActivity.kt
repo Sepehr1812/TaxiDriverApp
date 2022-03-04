@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.ClipDrawable
-import android.graphics.drawable.LayerDrawable
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -131,7 +130,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
             reConstraintMap()
             displayOfferSheet(it)
             addMapMarkers(it)
-            setUpButton()
         } ?: apply { moveToCurrentLocationFlag = true }
     }
 
@@ -194,25 +192,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
         this@MainActivity.map.animateCamera(
             CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
         )
-    }
-
-    /** implement button timer */
-    private fun setUpButton() {
-        with(binding) {
-            val layerDrawable = btnAccept.background as LayerDrawable
-            mClipDrawable =
-                layerDrawable.findDrawableByLayerId(R.id.clip_drawable) as ClipDrawable
-
-            // Set up TimeAnimator to fire off
-            mAnimator = TimeAnimator()
-            mAnimator?.setTimeListener(this@MainActivity)
-            animateButton()
-
-            btnAccept.setOnLongClickListener {
-                finish()
-                return@setOnLongClickListener true
-            }
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -297,15 +276,5 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
         if (mCurrentLevel >= MAX_LEVEL)
             mAnimator?.cancel()
         else mCurrentLevel = MAX_LEVEL.coerceAtMost(mCurrentLevel + LEVEL_INCREMENT)
-    }
-
-    /**
-     * Animates button timer progress by filling it from left to right.
-     */
-    private fun animateButton() {
-        if (mAnimator?.isRunning == false) {
-            mCurrentLevel = 0
-            mAnimator?.start()
-        }
     }
 }

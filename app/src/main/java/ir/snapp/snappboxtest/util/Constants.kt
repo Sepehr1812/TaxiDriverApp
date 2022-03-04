@@ -5,5 +5,6 @@ object Constants {
     const val IRAN_SANS_REGULAR_FONT = "iran_sans_fanum.ttf"
 
     const val LEVEL_INCREMENT = 20
+    const val LEVEL_INCREMENT_CLICK = 400
     const val MAX_LEVEL = 10000
 }
