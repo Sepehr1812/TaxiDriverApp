@@ -22,10 +22,15 @@ class TouchableButton @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : AppCompatButton(context, attrs, defStyleAttr), TimeAnimator.TimeListener {
 
+    // region of properties
     private var levelIncrement = Constants.LEVEL_INCREMENT
     private var mAnimator: TimeAnimator? = null
     private var mCurrentLevel = 0
     private var mClipDrawable: ClipDrawable? = null
+
+    var onLongClickListener: OnLongClickListener? = null
+
+    // END of region of properties
 
     init {
         // Set up TimeAnimator to fire off
@@ -56,6 +61,9 @@ class TouchableButton @JvmOverloads constructor(
         return false
     }
 
+    /**
+     * Sets background of the button to fill it from center to sides.
+     */
     private fun fillFromCenter() {
         background =
             ContextCompat.getDrawable(context, R.drawable.background_button_centeric)
@@ -67,6 +75,9 @@ class TouchableButton @JvmOverloads constructor(
         animateButton()
     }
 
+    /**
+     * Sets background of the button to fill it from right to left.
+     */
     private fun fillFromRight() {
         background = ContextCompat.getDrawable(context, R.drawable.background_button)
         val layerDrawable = background as LayerDrawable
@@ -75,14 +86,6 @@ class TouchableButton @JvmOverloads constructor(
 
         levelIncrement = Constants.LEVEL_INCREMENT
         animateButton()
-    }
-
-    override fun onTimeUpdate(animation: TimeAnimator?, totalTime: Long, deltaTime: Long) {
-        mClipDrawable?.level = mCurrentLevel
-        if (mCurrentLevel >= Constants.MAX_LEVEL)
-            mAnimator?.cancel()
-        else mCurrentLevel =
-            Constants.MAX_LEVEL.coerceAtMost(mCurrentLevel + levelIncrement)
     }
 
     /**
@@ -96,5 +99,33 @@ class TouchableButton @JvmOverloads constructor(
             mCurrentLevel = 0
             mAnimator?.start()
         }
+    }
+
+    override fun onTimeUpdate(animation: TimeAnimator?, totalTime: Long, deltaTime: Long) {
+        // offer timer
+        if (levelIncrement == Constants.LEVEL_INCREMENT) {
+            mClipDrawable?.level = mCurrentLevel
+
+            if (mCurrentLevel >= Constants.MAX_LEVEL) {
+                mAnimator?.cancel()
+
+            } else mCurrentLevel =
+                Constants.MAX_LEVEL.coerceAtMost(mCurrentLevel + levelIncrement)
+        } else { // click timer
+            // times level increment 2 to fill the button in the half of time the activity should be finished
+            mClipDrawable?.level = mCurrentLevel.times(2)
+
+            if (mCurrentLevel >= Constants.MAX_LEVEL) {
+                mAnimator?.cancel()
+                // call onLongClickListener to finish MainActivity
+                onLongClickListener?.onLongClickListener()
+            } else mCurrentLevel =
+                Constants.MAX_LEVEL.coerceAtMost(mCurrentLevel + levelIncrement)
+        }
+    }
+
+    interface OnLongClickListener {
+        /** calls when user long clicks on the button. */
+        fun onLongClickListener() // to accept the offer and finish MainActivity
     }
 }
