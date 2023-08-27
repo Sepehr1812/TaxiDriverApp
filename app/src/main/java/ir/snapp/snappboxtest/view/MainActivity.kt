@@ -1,13 +1,10 @@
 package ir.snapp.snappboxtest.view
 
 import android.Manifest
-import android.animation.TimeAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.drawable.ClipDrawable
-import android.graphics.drawable.LayerDrawable
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -15,6 +12,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintSet
@@ -35,15 +33,14 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import ir.snapp.snappboxtest.R
+import ir.snapp.snappboxtest.component.TouchableButton
 import ir.snapp.snappboxtest.data.Offer
 import ir.snapp.snappboxtest.databinding.ActivityMainBinding
-import ir.snapp.snappboxtest.util.Constants.LEVEL_INCREMENT
-import ir.snapp.snappboxtest.util.Constants.MAX_LEVEL
 import ir.snapp.snappboxtest.util.Constants.OFFER
 import ir.snapp.snappboxtest.util.DialogHelper
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeListener {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, TouchableButton.OnLongClickListener {
 
     // region of properties
     private var _binding: ActivityMainBinding? = null
@@ -63,10 +60,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
 
     /** determines moving map camera to current location or not */
     private var moveToCurrentLocationFlag = false
-
-    private var mAnimator: TimeAnimator? = null
-    private var mCurrentLevel = 0
-    private var mClipDrawable: ClipDrawable? = null
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -131,7 +124,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
             reConstraintMap()
             displayOfferSheet(it)
             addMapMarkers(it)
-            setUpButton()
         } ?: apply { moveToCurrentLocationFlag = true }
     }
 
@@ -164,6 +156,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
                 text = getString(R.string.dest_address_placeholder, offer.destination.address)
                 setOnClickListener { moveToLocation(offer.destination.latLng) }
             }
+            btnAccept.onLongClickListener = this@MainActivity
         }
     }
 
@@ -194,25 +187,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
         this@MainActivity.map.animateCamera(
             CameraUpdateFactory.newLatLngBounds(latLngBounds.build(), 200)
         )
-    }
-
-    /** implement button timer */
-    private fun setUpButton() {
-        with(binding) {
-            val layerDrawable = btnAccept.background as LayerDrawable
-            mClipDrawable =
-                layerDrawable.findDrawableByLayerId(R.id.clip_drawable) as ClipDrawable
-
-            // Set up TimeAnimator to fire off
-            mAnimator = TimeAnimator()
-            mAnimator?.setTimeListener(this@MainActivity)
-            animateButton()
-
-            btnAccept.setOnLongClickListener {
-                finish()
-                return@setOnLongClickListener true
-            }
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -292,20 +266,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, TimeAnimator.TimeL
         super.onDestroy()
     }
 
-    override fun onTimeUpdate(animation: TimeAnimator?, totalTime: Long, deltaTime: Long) {
-        mClipDrawable?.level = mCurrentLevel
-        if (mCurrentLevel >= MAX_LEVEL)
-            mAnimator?.cancel()
-        else mCurrentLevel = MAX_LEVEL.coerceAtMost(mCurrentLevel + LEVEL_INCREMENT)
-    }
-
-    /**
-     * Animates button timer progress by filling it from left to right.
-     */
-    private fun animateButton() {
-        if (mAnimator?.isRunning == false) {
-            mCurrentLevel = 0
-            mAnimator?.start()
-        }
+    override fun onLongClickListener() {
+        Toast.makeText(this, R.string.offer_accepted, Toast.LENGTH_SHORT).show()
+        finish()
     }
 }
